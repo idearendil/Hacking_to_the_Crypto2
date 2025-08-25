@@ -1,0 +1,10 @@
+*.csv
+ag_models_balanced
+ag_models_accuracy
+hour4_models
+hour4_models_1
+hour4_models_2
+hour4_models_3
+*.pkl
+*.pth
+*.png
