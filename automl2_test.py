@@ -5,7 +5,7 @@ from sklearn.metrics import precision_recall_curve, average_precision_score
 import matplotlib.pyplot as plt
 
 INPUT_DIR = "G:/preprocessed_data_hour4_21900"  # 전처리 완료된 CSV 폴더
-LABEL = "label"
+LABEL = "label1"
 LOAD_DATASET = True
 TEST_RATIO = 0.2
 
@@ -42,13 +42,15 @@ if not LOAD_DATASET:
 
     train_df = pd.concat(train_list, ignore_index=True)
     test_df = pd.concat(test_list, ignore_index=True)
-    train_df.to_csv("automl_data_hour4_21900_train.csv", index=False)
-    test_df.to_csv("automl_data_hour4_21900_test.csv", index=False)    
+    train_df.drop(['label2'], axis=1, inplace=True)
+    test_df.drop(['label2'], axis=1, inplace=True)
+    train_df.to_csv("automl_data_label1_train.csv", index=False)
+    test_df.to_csv("automl_data_label1_test.csv", index=False)    
 else:
-    train_df = pd.read_csv("automl_data_hour4_21900_train.csv")
-    test_df = pd.read_csv("automl_data_hour4_21900_test.csv")
+    train_df = pd.read_csv("automl_data_label1_train.csv")
+    test_df = pd.read_csv("automl_data_label1_test.csv")
 
-predictor = TabularPredictor.load("hour4_models")
+predictor = TabularPredictor.load("hour4_models_1")
 
 preds = predictor.predict(test_df.head(10))
 print(preds)
@@ -73,5 +75,5 @@ plt.title("Precision-Recall Curve")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig("automl2_pr_curve.png", dpi=300)
+plt.savefig("label1_pr_curve.png", dpi=300)
 plt.close()

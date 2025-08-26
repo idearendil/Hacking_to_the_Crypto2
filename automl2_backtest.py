@@ -11,11 +11,11 @@ from agent1 import Agent1
 INPUT_DIR = "G:/preprocessed_data_hour4_21900"
 SEED_MONEY = 10000000
 LABEL = "label"
-MODEL_PATH = "hour4_models"  # predictor 저장된 경로로 바꿔주세요
+MODEL_PATH = ["hour4_models_1", "hour4_models_2"]
 
-predictor = TabularPredictor.load(MODEL_PATH)
-agent = Agent1(predictor)
-
+binary_predictor = TabularPredictor.load(MODEL_PATH[0])
+regression_predictor = TabularPredictor.load(MODEL_PATH[1])
+agent = Agent1(binary_predictor, regression_predictor, labels=["label1", "label2"])
 
 # -----------------------------
 # CSV 불러오기
@@ -44,7 +44,7 @@ for i in tqdm(range(1, 201)):
     today_data = {c: df.iloc[i] for c, df in coin_data.items()}
     prev_data = {c: df.iloc[i - 1] for c, df in coin_data.items()}  # 모델 입력용 (전날)
 
-    order_lst = agent.act(prev_data, capital, holding_coin, buy_price)
+    order_lst = agent.act(prev_data, capital, holding_coin)
     if order_lst is None:
         continue
 

@@ -4,8 +4,8 @@ from autogluon.tabular import TabularDataset, TabularPredictor
 from sklearn.metrics import precision_recall_curve, average_precision_score
 import matplotlib.pyplot as plt
 
-INPUT_DIR = "G:/preprocessed_data_hour4_21900"  # 전처리 완료된 CSV 폴더
-LABEL = ["label1", "label2", "label3"]
+INPUT_DIR = "G:/hacking2_data_hour4_21900"  # 전처리 완료된 CSV 폴더
+LABEL = ["label1", "label2"]
 BUILD_DATASET = True
 TEST_RATIO = 0.2
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # 1. 모든 CSV 불러와서 합치기
     # --------------------------------
     if BUILD_DATASET:
-        for model_id in range(1, 4):
+        for model_id in range(1, 3):
             train_list = []
             test_list = []
             files = [f for f in os.listdir(INPUT_DIR) if f.endswith(".csv")]
@@ -26,9 +26,9 @@ if __name__ == "__main__":
                 # label 없는 행 제외
                 df = df.dropna(subset=[LABEL[0]])
 
-                if model_id > 1:
+                if model_id == 2:
                     df_pos = df[df[f"label{model_id-1}"] == 1]
-                    df_neg = df[df[f"label{model_id-1}"] == 0].sample(frac=len(df_pos) / len(df) * 0.5, random_state=42)
+                    df_neg = df[df[f"label{model_id-1}"] == 0].sample(frac=len(df_pos) / (len(df) - len(df_pos)) * 0.3, random_state=42)
                     df = pd.concat([df_pos, df_neg]).reset_index(drop=True)
                     df = df.sort_values(by='date', ascending=True)
                 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
             train_df = pd.concat(train_list, ignore_index=True)
             test_df = pd.concat(test_list, ignore_index=True)
             drop_lst = []
-            for idx in range(1, 4):
+            for idx in range(1, 3):
                 if idx != model_id:
                     drop_lst.append(f"label{idx}")
             train_df.drop(drop_lst, axis=1, inplace=True)
@@ -61,20 +61,32 @@ if __name__ == "__main__":
     # --------------------------------
     # 3. AutoGluon 학습
     # --------------------------------
-    for model_id in range(2, 4):
+    for model_id in range(2, 3):
         train_df = pd.read_csv(f"automl_data_label{model_id}_train.csv")
         test_df = pd.read_csv(f"automl_data_label{model_id}_test.csv")
         print(f"train: {len(train_df)}, test: {len(test_df)}")
 
-        predictor = TabularPredictor(
-            label=LABEL[model_id-1],
-            problem_type="binary",
-            eval_metric="accuracy",
-            path=f"hour4_models_{model_id}"
-        ).fit(
-            train_df,
-            presets="extreme_quality",
-        )
+
+        if model_id == 1:
+            predictor = TabularPredictor(
+                label=LABEL[model_id-1],
+                problem_type="binary",
+                eval_metric="accuracy",
+                path=f"hour4_models_{model_id}"
+            ).fit(
+                train_df,
+                presets="extreme_quality",
+            )
+        else:
+            predictor = TabularPredictor(
+                label=LABEL[model_id-1],
+                problem_type="regression",
+                eval_metric="mean_squared_error",
+                path=f"hour4_models_{model_id}"
+            ).fit(
+                train_df,
+                presets="extreme_quality",
+            )
 
         # --------------------------------
         # 4. 평가 & 결과 확인
@@ -89,19 +101,20 @@ if __name__ == "__main__":
         # --------------------------------
         # 4-1. Precision-Recall Curve 저장
         # --------------------------------
-        y_true = test_df[LABEL[model_id-1]]
-        y_proba = predictor.predict_proba(test_df)[1]  # positive 클래스 확률 (label=1일 때)
+        if model_id == 1:
+            y_true = test_df[LABEL[model_id-1]]
+            y_proba = predictor.predict_proba(test_df)[1]  # positive 클래스 확률 (label=1일 때)
 
-        precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
-        avg_precision = average_precision_score(y_true, y_proba)
+            precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
+            avg_precision = average_precision_score(y_true, y_proba)
 
-        plt.figure(figsize=(8, 6))
-        plt.plot(recall, precision, label=f"AP={avg_precision:.4f}")
-        plt.xlabel("Recall")
-        plt.ylabel("Precision")
-        plt.title("Precision-Recall Curve")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(f"automl2_pr_curve_{model_id}.png", dpi=300)
-        plt.close()
+            plt.figure(figsize=(8, 6))
+            plt.plot(recall, precision, label=f"AP={avg_precision:.4f}")
+            plt.xlabel("Recall")
+            plt.ylabel("Precision")
+            plt.title("Precision-Recall Curve")
+            plt.legend()
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig(f"automl2_pr_curve_{model_id}.png", dpi=300)
+            plt.close()

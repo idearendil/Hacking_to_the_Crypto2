@@ -5,11 +5,11 @@ import ta  # technical analysis library
 import numpy as np
 
 INPUT_DIR = "data_hour4_21900"
-OUTPUT_DIR = "G:/preprocessed_data_hour4_21900"
+OUTPUT_DIR = "G:/hacking2_data_hour4_21900"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def add_time_features_infer_dates(df: pd.DataFrame, last_date_str="2025-08-21 20:00") -> pd.DataFrame:
+def add_time_features_infer_dates(df: pd.DataFrame, last_date_str="2025-08-21 21:00") -> pd.DataFrame:
     """
     CSV 마지막 날짜를 기준으로 날짜 역추적 후 정수형 시간 feature 추가
     - last_date_str: CSV 마지막 행 날짜 (YYYY-MM-DD HH:MM)
@@ -70,33 +70,25 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
 def create_label(df: pd.DataFrame) -> pd.DataFrame:
     labels1 = []
     labels2 = []
-    labels3 = []
     n = len(df)
     for i in range(n):
         if i + 7 < n:
             base_open = df.loc[i+1, "open"]
             label1 = 0
-            label2 = 0
-            label3 = 0
+            label2 = -1
             for j in range(i+1, i+7):
                 if df.loc[j, "low"] <= base_open * 0.99:
                     break
                 if df.loc[j, "high"] >= base_open * 1.02:
                     label1 = 1
-                if df.loc[j, "high"] >= base_open * 1.03:
-                    label2 = 1
-                if df.loc[j, "high"] >= base_open * 1.04:
-                    label3 = 1
+                label2 = max(label2, (df.loc[j, 'high'] / base_open - 1) * 100)
             labels1.append(label1)
             labels2.append(label2)
-            labels3.append(label3)
         else:
             labels1.append(np.nan)
             labels2.append(np.nan)
-            labels3.append(np.nan)
     df["label1"] = labels1
     df["label2"] = labels2
-    df["label3"] = labels3
     return df
 
 
