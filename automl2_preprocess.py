@@ -75,13 +75,14 @@ def create_label(df: pd.DataFrame) -> pd.DataFrame:
         if i + 7 < n:
             base_open = df.loc[i+1, "open"]
             label1 = 0
-            label2 = -1
+            label2 = 0
             for j in range(i+1, i+7):
                 if df.loc[j, "low"] <= base_open * 0.99:
                     break
                 if df.loc[j, "high"] >= base_open * 1.02:
                     label1 = 1
-                label2 = max(label2, (df.loc[j, 'high'] / base_open - 1) * 100)
+                if df.loc[j, "high"] >= base_open * 1.04:
+                    label2 = 1
             labels1.append(label1)
             labels2.append(label2)
         else:

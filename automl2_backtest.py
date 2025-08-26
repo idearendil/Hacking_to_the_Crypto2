@@ -13,9 +13,9 @@ SEED_MONEY = 10000000
 LABEL = "label"
 MODEL_PATH = ["hour4_models_1", "hour4_models_2"]
 
-binary_predictor = TabularPredictor.load(MODEL_PATH[0])
-regression_predictor = TabularPredictor.load(MODEL_PATH[1])
-agent = Agent1(binary_predictor, regression_predictor, labels=["label1", "label2"])
+binary_predictor1 = TabularPredictor.load(MODEL_PATH[0])
+binary_predictor2 = TabularPredictor.load(MODEL_PATH[1])
+agent = Agent1(binary_predictor1, binary_predictor2, labels=["label1", "label2"])
 
 # -----------------------------
 # CSV 불러오기

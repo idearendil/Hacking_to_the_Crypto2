@@ -27,10 +27,7 @@ if __name__ == "__main__":
                 df = df.dropna(subset=[LABEL[0]])
 
                 if model_id == 2:
-                    df_pos = df[df[f"label{model_id-1}"] == 1]
-                    df_neg = df[df[f"label{model_id-1}"] == 0].sample(frac=len(df_pos) / (len(df) - len(df_pos)) * 0.3, random_state=42)
-                    df = pd.concat([df_pos, df_neg]).reset_index(drop=True)
-                    df = df.sort_values(by='date', ascending=True)
+                    df = df[df[f"label{model_id-1}"] == 1]
                 
                 # 어떤 코인 데이터인지 구분하는 컬럼 추가 (모델에 유용할 수 있음)
                 df["coin"] = f.replace(".csv", "")
@@ -67,26 +64,15 @@ if __name__ == "__main__":
         print(f"train: {len(train_df)}, test: {len(test_df)}")
 
 
-        if model_id == 1:
-            predictor = TabularPredictor(
-                label=LABEL[model_id-1],
-                problem_type="binary",
-                eval_metric="accuracy",
-                path=f"hour4_models_{model_id}"
-            ).fit(
-                train_df,
-                presets="extreme_quality",
-            )
-        else:
-            predictor = TabularPredictor(
-                label=LABEL[model_id-1],
-                problem_type="regression",
-                eval_metric="mean_squared_error",
-                path=f"hour4_models_{model_id}"
-            ).fit(
-                train_df,
-                presets="extreme_quality",
-            )
+        predictor = TabularPredictor(
+            label=LABEL[model_id-1],
+            problem_type="binary",
+            eval_metric="accuracy",
+            path=f"hour4_models_{model_id}"
+        ).fit(
+            train_df,
+            presets="extreme_quality",
+        )
 
         # --------------------------------
         # 4. 평가 & 결과 확인
@@ -101,20 +87,19 @@ if __name__ == "__main__":
         # --------------------------------
         # 4-1. Precision-Recall Curve 저장
         # --------------------------------
-        if model_id == 1:
-            y_true = test_df[LABEL[model_id-1]]
-            y_proba = predictor.predict_proba(test_df)[1]  # positive 클래스 확률 (label=1일 때)
+        y_true = test_df[LABEL[model_id-1]]
+        y_proba = predictor.predict_proba(test_df)[1]  # positive 클래스 확률 (label=1일 때)
 
-            precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
-            avg_precision = average_precision_score(y_true, y_proba)
+        precision, recall, thresholds = precision_recall_curve(y_true, y_proba)
+        avg_precision = average_precision_score(y_true, y_proba)
 
-            plt.figure(figsize=(8, 6))
-            plt.plot(recall, precision, label=f"AP={avg_precision:.4f}")
-            plt.xlabel("Recall")
-            plt.ylabel("Precision")
-            plt.title("Precision-Recall Curve")
-            plt.legend()
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig(f"automl2_pr_curve_{model_id}.png", dpi=300)
-            plt.close()
+        plt.figure(figsize=(8, 6))
+        plt.plot(recall, precision, label=f"AP={avg_precision:.4f}")
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title("Precision-Recall Curve")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(f"automl2_pr_curve_{model_id}.png", dpi=300)
+        plt.close()
