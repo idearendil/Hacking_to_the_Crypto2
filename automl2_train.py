@@ -4,9 +4,9 @@ from autogluon.tabular import TabularDataset, TabularPredictor
 from sklearn.metrics import precision_recall_curve, average_precision_score
 import matplotlib.pyplot as plt
 
-INPUT_DIR = "G:/hacking2_data_hour4_21900"  # 전처리 완료된 CSV 폴더
+INPUT_DIR = "G:/hacking2_data_min10_262800"  # 전처리 완료된 CSV 폴더
 LABEL = ["label1", "label2"]
-BUILD_DATASET = True
+BUILD_DATASET = False
 TEST_RATIO = 0.2
 
 if __name__ == "__main__":
@@ -25,6 +25,7 @@ if __name__ == "__main__":
                 
                 # label 없는 행 제외
                 df = df.dropna(subset=[LABEL[0]])
+                df = df.sample(frac=0.1, random_state=42)
 
                 if model_id == 2:
                     df = df[df[f"label{model_id-1}"] == 1]
